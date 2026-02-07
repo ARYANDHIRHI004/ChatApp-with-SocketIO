@@ -6,7 +6,8 @@ dotenv.config({
 
 export const env = {
     PORT: process.env.PORT,
-    MONGODB_URI: process.env.MONGODB_URI
+    MONGODB_URI: process.env.MONGODB_URI,
+    ORIGIN: process.env.ORIGIN,
 }
 
 export const DB_NAME = "ChatApp"
