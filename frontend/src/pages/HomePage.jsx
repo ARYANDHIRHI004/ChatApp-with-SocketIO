@@ -1,9 +1,14 @@
-import React from 'react'
+import { useEffect } from "react";
+import useAuthStore from "../stores/useAuthStore";
 
 const HomePage = () => {
-  return (
-    <div>HomePage</div>
-  )
-}
+  const { getCurrentUser, authUser } = useAuthStore();
 
-export default HomePage
+  useEffect(() => {
+    getCurrentUser();
+  });
+
+  return <div className="bg-[#250061] p-5 text-white">{authUser}</div>;
+};
+
+export default HomePage;
