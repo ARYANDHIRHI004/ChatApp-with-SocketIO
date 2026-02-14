@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    avatar:{
+        url:{
+            type:String,
+            default:""
+        }
+    },
     isEmailVerified: {
         type: Boolean,
         default: false
