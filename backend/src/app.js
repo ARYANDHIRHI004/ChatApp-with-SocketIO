@@ -17,11 +17,9 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-app.get("/", (req, res) => {
-    res.json({
-        name: "Aryan Dhirhi"
-    })
-})
+import userRouter from "./routes/user.routes.js";
+
+app.use("/api/v1/user", userRouter)
 
 
 export default app
