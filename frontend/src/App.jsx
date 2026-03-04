@@ -3,16 +3,17 @@ import HomePage from "./pages/HomePage";
 import Layout from "./components/Layout";
 import WelcomePage from "./pages/WelcomePage";
 import { Toaster } from "react-hot-toast";
+import UsersList from "./pages/UsersList";
 
 function App() {
-  const AuthUser = true;
+  const authUser = true;
 
   return (
     <>
       <Toaster />
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route path="/" element={AuthUser ? <HomePage /> : <WelcomePage />} />
+          <Route path="/" element={!authUser ? <HomePage /> : <UsersList />} />
         </Route>
       </Routes>
     </>
