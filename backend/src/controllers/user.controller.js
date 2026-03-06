@@ -36,7 +36,11 @@ export const registerUSer = asyncHandler(async (req, res) => {
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
 
+    
     const avatar = await uploadFileToCloudinary(avatarLocalPath);
+    console.log(avatar)
+
+    
 
     const user = await User.create({
         username,
@@ -94,4 +98,31 @@ export const loginUser = asyncHandler(async (req, res) => {
         )
 
 
+})
+
+export const logoutUser = asyncHandler(async (req, res) => {
+    const user = req.user._id
+
+    await User.findByIdAndUpdate(user, { refreshToken: null })
+
+    return res.status(200)
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken")
+    .json(
+        new ApiResponse(200, "User logged out successfully")
+    )
+})
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+    const user = req.user._id
+
+    const currentUser = await User.findById(user)
+
+    if(!currentUser){
+        throw new ApiError(401, "User not found")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, "User found successfully", currentUser)
+    )
 })
