@@ -7,6 +7,11 @@ const groupsSchema = new mongoose.Schema({
         required:true
     },
 
+    admin:{
+        type: mongoose.Types.ObjectId,
+        ref: "User"
+    },
+
     description:{
         type:String,
         requiredl: true

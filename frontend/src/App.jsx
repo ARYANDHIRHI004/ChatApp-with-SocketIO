@@ -1,12 +1,16 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import Layout from "./components/Layout";
 import WelcomePage from "./pages/WelcomePage";
 import { Toaster } from "react-hot-toast";
 import UsersList from "./pages/UsersList";
+import useAuthStore from "./stores/useAuthStore";
+import SignUp from "./pages/SignUp";
 
 function App() {
-  const authUser = true;
+
+  const {authUser} = useAuthStore()
+
 
   return (
     <>
@@ -14,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route path="/" element={!authUser ? <HomePage /> : <UsersList />} />
+          <Route path="/sign-up" element={!authUser ? <SignUp /> : <Navigate to="/" />} />
         </Route>
       </Routes>
     </>
