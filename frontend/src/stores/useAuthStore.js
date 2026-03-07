@@ -10,6 +10,9 @@ const useAuthStore = create((set) => ({
     isLoggingIn: false,
     isLoggingOut: false,
 
+    allUsers: null,
+    isFatchingAllUsers: false,
+
 
     registerUser: async (data) => {
         try {
@@ -27,10 +30,10 @@ const useAuthStore = create((set) => ({
 
         }
     },
-    loginUser: async () => {
+    loginUser: async (data) => {
         try {
             set({ isLoggingIn: true })
-            const res = await axiosInstance.get("/user/login-user")
+            const res = await axiosInstance.post("/user/login-user", data)
             set({ authUser: res.data, isLoggingIn: true })
         } catch (error) {
             set({ isLoggingIn: false })
@@ -55,6 +58,17 @@ const useAuthStore = create((set) => ({
             set({ authUser: res.data, isFetchingAuthUser: true })
         } catch (error) {
             set({ isFetchingAuthUser: false })
+
+        }
+    },
+
+    getAllUsers: async () => {
+        try {
+            set({ isFatchingAllUsers: true })
+            const res = await axiosInstance.get("/user/get-all-users")
+            set({ allUsers: res.data, isFatchingAllUsers: true })
+        } catch (error) {
+            set({ isFatchingAllUsers: false })
 
         }
     }

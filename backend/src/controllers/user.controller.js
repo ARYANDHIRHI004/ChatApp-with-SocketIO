@@ -7,16 +7,18 @@ import uploadFileToCloudinary from "../utils/cloudinary.js";
 const generateAccessAndRefreshToken = async (user) => {
     try {
         const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshTokenToken()
+        const refreshToken = user.generateRefreshToken()
 
         user.refreshToken = refreshToken
         await user.save({ validateBeforeSave: false })
         return { accessToken, refreshToken }
     } catch (error) {
+        console.log(error);
+        
         throw new ApiError(500, "Something went wrong while generating access and refresh token")
+
     }
 }
-
 
 export const registerUSer = asyncHandler(async (req, res) => {
 
@@ -65,9 +67,10 @@ export const registerUSer = asyncHandler(async (req, res) => {
 })
 
 export const loginUser = asyncHandler(async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
+
 
     if (!user) {
         throw new ApiError(401, "User not found.")
@@ -79,7 +82,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid Credentials")
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken();
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user);
 
     const loggedInUser = await User.findById(user._id).select("-password -resfreshToken")
 
@@ -124,5 +127,13 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 
     return res.status(200).json(
         new ApiResponse(200, "User found successfully", currentUser)
+    )
+})
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+    const users = await User.find().select("-password -refreshToken")
+
+    return res.status(200).json(
+        new ApiResponse(200, "Users found successfully", users)
     )
 })

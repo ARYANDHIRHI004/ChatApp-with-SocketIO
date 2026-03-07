@@ -1,48 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
+import useAuthStore from "../stores/useAuthStore";
+import socket from "../services/socker";
 
-const users = [
-    {
-      id: 1,
-      name: "Alice Johnson",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      isOnline: true,
-      lastMessage: "Hey! Are we meeting today?",
-      lastMessageTime: "2:45 PM",
-    },
-    {
-      id: 2,
-      name: "Bob Smith",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      isOnline: false,
-      lastMessage: "Thanks for the update.",
-      lastMessageTime: "1:10 PM",
-    },
-    {
-      id: 3,
-      name: "Charlie Brown",
-      avatar: "https://i.pravatar.cc/150?img=3",
-      isOnline: true,
-      lastMessage: "Let’s finish the project.",
-      lastMessageTime: "Yesterday",
-    },
-    {
-      id: 4,
-      name: "Diana Prince",
-      avatar: "https://i.pravatar.cc/150?img=4",
-      isOnline: false,
-      lastMessage: "Call me when you're free.",
-      lastMessageTime: "Monday",
-    },
-  ];
+const ChatApp = ({ userId }) => {
+  const { authUser, allUsers } = useAuthStore();
+  console.log(userId)
 
-const ChatApp = ({userId}) => {
-
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hello 👋", sender: "other" },
-    { id: 2, text: "Hi! How are you?", sender: "me" },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const [input, setInput] = useState("");
+  const [typing, setTyping] = useState("");
+
   const messagesEndRef = useRef(null);
 
   // Auto scroll to bottom
@@ -56,61 +24,94 @@ const ChatApp = ({userId}) => {
     const newMessage = {
       id: Date.now(),
       text: input,
-      sender: "me",
+      sender: authUser.data._id,
+      receiver: userId,
     };
 
-    setMessages([...messages, newMessage]);
-    setInput("");
+    socket.emit("message", newMessage);
 
-    // Dummy reply after 1 second
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          text: "Got your message 👍",
-          sender: "other",
-        },
-      ]);
-    }, 1000);
+    setMessages((prev) => [...prev, newMessage]);
+
+    setInput("");
   };
+
+  useEffect(() => {
+    socket.on("incomingMsg", (message) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    socket.on("typing", (data) => {
+      if (data.sender === userId) {       
+        setTyping("Typing...");
+      }
+    });
+    socket.on("stopTyping", () => {
+      setTyping(null);
+    });
+
+    return () => {
+      socket.off("incomingMsg");
+      socket.off("typing");
+      socket.off("stopTyping");
+    };
+  }, [userId]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       sendMessage();
     }
   };
+  let typingTimeout;
+
+  const sendIndicator = (value) => {
+    setInput(value);
+
+    socket.emit("typing", {
+      sender: authUser.data._id,
+      receiver: userId,
+    });
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+      socket.emit("stopTyping", {
+        sender: authUser.data._id,
+        receiver: userId,
+      });
+    }, 1000);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      
       {/* Header */}
       <div className="p-4 bg-white border-b shadow-sm">
-        <h2 className="font-semibold text-lg">{
-          users.find((user) => {return user.id === userId}).name    
-        }</h2>
+        <h2 className="font-semibold text-lg">
+          {allUsers?.data?.find((user) => user._id === userId)?.fullname}
+        </h2>
+        <p>{typing}</p>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.sender === "me" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`px-4 py-2 rounded-2xl max-w-xs break-words ${
-                msg.sender === "me"
-                  ? "bg-blue-500 text-white rounded-br-none"
-                  : "bg-white text-gray-800 rounded-bl-none shadow"
-              }`}
-            >
-              {msg.text}
-            </div>
-          </div>
-        ))}
+        {messages.map((msg) => {
+          if (userId === msg.receiver) {
+            return (
+              <div key={msg.id} className="flex justify-end">
+                <div className="bg-blue-500 text-white rounded-lg p-2">
+                  {msg.text}
+                </div>
+              </div>
+            );
+          } else if (userId === msg.sender) {
+            return (
+              <div key={msg.id} className="flex justify-start">
+                <div className="bg-gray-200 text-gray-800 rounded-lg p-2">
+                  {msg.text}
+                </div>
+              </div>
+            );
+          }
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -121,7 +122,7 @@ const ChatApp = ({userId}) => {
           placeholder="Type a message..."
           className="flex-1 px-4 py-2 border rounded-full outline-none focus:ring-2 focus:ring-blue-400"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => sendIndicator(e.target.value)}
           onKeyDown={handleKeyPress}
         />
         <button

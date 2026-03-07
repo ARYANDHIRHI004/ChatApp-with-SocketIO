@@ -6,10 +6,16 @@ import { Toaster } from "react-hot-toast";
 import UsersList from "./pages/UsersList";
 import useAuthStore from "./stores/useAuthStore";
 import SignUp from "./pages/SignUp";
+import LoginPage from "./pages/LoginPage";
+import { useEffect } from "react";
 
 function App() {
 
-  const {authUser} = useAuthStore()
+ const { getCurrentUser, authUser } = useAuthStore();
+
+  useEffect(() => {
+    getCurrentUser();
+  },[getCurrentUser]);
 
 
   return (
@@ -19,6 +25,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route path="/" element={!authUser ? <HomePage /> : <UsersList />} />
           <Route path="/sign-up" element={!authUser ? <SignUp /> : <Navigate to="/" />} />
+          <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         </Route>
       </Routes>
     </>
