@@ -5,13 +5,15 @@ import jwt, { decode } from "jsonwebtoken"
 // authentication Middleware
 const verifyJWT = async (req, _, next) => {
     try {
-        const token = req.cookies.accessToken;
+        const token = req.cookies?.accessToken;
 
         if (!token) {
             throw new ApiError(401, "Invalid Token");
         }
 
-        const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET_KEY);
+        const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+
+        
 
         if (!decodedToken) {
             throw new ApiError(401, "Invalid Token");
